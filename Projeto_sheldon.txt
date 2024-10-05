@@ -1,0 +1,140 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <unistd.h> 
+#include <windows.h>
+
+
+void mostrar_opcoes() {
+    printf("Menu de opcoes\n");
+    printf("1 - Pedra\n");
+    printf("2 - Papel\n");
+    printf("3 - Tesoura\n");
+    printf("4 - Lagarto\n");
+    printf("5 - Spock\n");
+}
+
+int determinar_vencedor(int p1, int p2) {
+    if (p1 == p2) return 0; 
+    if ((p1 == 1 && (p2 == 3 || p2 == 4)) ||
+        (p1 == 2 && (p2 == 1 || p2 == 5)) ||
+        (p1 == 3 && (p2 == 2 || p2 == 4)) ||
+        (p1 == 4 && (p2 == 2 || p2 == 5)) ||
+        (p1 == 5 && (p2 == 1 || p2 == 3))) {
+        return 1; 
+    } else {
+        return 2; 
+    }
+}
+
+
+void mostrar_regras() {
+    printf("\nRegras do jogo:\n");
+    printf("Tesoura corta Papel, Papel cobre Pedra,\n");
+    printf("Pedra esmaga Lagarto, Lagarto envenena Spock,\n");
+    printf("Spock esmaga Tesoura, Tesoura decapita Lagarto,\n");
+    printf("Lagarto come Papel, Papel refuta Spock,\n");
+    printf("Spock vaporiza Pedra, e como sempre, Pedra quebra Tesoura.\n\n");
+}
+
+
+void fazer_jogada(int modo, int *pontos_p1, int *pontos_p2, int *pontos_maquina) {
+    int player1 = 0, player2 = 0;
+
+    printf("Jogador 1, faca sua escolha (1 a 5):\n");
+
+    
+    if (scanf("%d", &player1) != 1 || player1 < 1 || player1 > 5) {
+        printf("Jogador 1 fez uma escolha invalida. Jogador 2/maquina vence esta rodada!\n");
+        if (modo == 1) (*pontos_p2)++; else (*pontos_maquina)++;
+        return; 
+    }
+
+    if (modo == 2) { 
+        player2 = rand() % 5 + 1;
+        printf("Maquina escolheu: %d\n", player2);
+    } else {
+        printf("Jogador 2, faca sua escolha (1 a 5):\n");
+        if (scanf("%d", &player2) != 1 || player2 < 1 || player2 > 5) {
+            printf("Jogador 2 fez uma escolha invalida. Jogador 1 vence esta rodada!\n");
+            (*pontos_p1)++;
+            return; 
+        }
+    }
+
+   
+    int vencedor = determinar_vencedor(player1, player2);
+    if (vencedor == 1) {
+        printf("Player 1 Venceu esta rodada!\n");
+        (*pontos_p1)++;
+    } else if (vencedor == 2) {
+        if (modo == 1) {
+            printf("Player 2 Venceu esta rodada!\n");
+            (*pontos_p2)++;
+        } else {
+            printf("Maquina venceu esta rodada!\n");
+            (*pontos_maquina)++;
+        }
+    } else {
+        printf("Empate nesta rodada!\n");
+    }
+}
+
+
+void jogar_turno(int tempo, int modo) {
+    time_t inicio, agora;
+    int pontos_p1 = 0, pontos_p2 = 0, pontos_maquina = 0;
+
+    printf("Turno de %d segundos! Faca suas jogadas!\n", tempo);
+    inicio = time(NULL);
+
+    while (1) {
+        agora = time(NULL);
+        if (difftime(agora, inicio) >= tempo) {
+            break;
+        }
+
+        fazer_jogada(modo, &pontos_p1, &pontos_p2, &pontos_maquina);
+        sleep(1); 
+    }
+
+    
+    if (modo == 1) {
+        printf("Placar Final: Player 1: %d | Player 2: %d\n", pontos_p1, pontos_p2);
+    } else {
+        printf("Placar Final: Player 1: %d | Maquina: %d\n", pontos_p1, pontos_maquina);
+    }
+}
+
+int main() {
+    srand(time(NULL)); 
+
+    int escolha_jogo;
+    int tempo_jogo;
+
+    printf("-----------------------------------------------------------\n");
+    printf("Bem-vindo ao jogo Pedra, Papel, Tesoura, Lagarto e Spock\n");
+    printf("-----------------------------------------------------------\n");
+    mostrar_regras();
+    mostrar_opcoes();
+    
+    do {
+        printf("Como voce deseja jogar?\n");
+        printf("1 - Player 1 x Player 2\n");
+        printf("2 - Player 1 x Maquina\n");
+        scanf("%d", &escolha_jogo);
+
+        printf("Escolha o tempo do turno (30, 45 ou 60 segundos): ");
+        scanf("%d", &tempo_jogo);
+        if (tempo_jogo != 30 && tempo_jogo != 45 && tempo_jogo != 60) {
+            printf("Tempo invalido. Escolha 30, 45 ou 60.\n");
+            continue;
+        }
+
+        jogar_turno(tempo_jogo, escolha_jogo);
+
+        printf("Deseja jogar novamente? (1 - Sim, 0 - Nao): ");
+        scanf("%d", &escolha_jogo);
+    } while (escolha_jogo != 0);
+    return 0;
+}
